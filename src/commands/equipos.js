@@ -24,7 +24,7 @@ module.exports = {
         teamList,
         "",
         "═══════════════════════════════════",
-        `Total: ${teams.length} equipos registrados"
+        `Total: ${teams.length} equipos registrados`
       ].join("\n")
     );
   }
