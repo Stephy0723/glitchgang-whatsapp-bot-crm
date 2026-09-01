@@ -5,9 +5,27 @@ module.exports = {
     const match = await gg.getUpcomingMatch(phone);
 
     if (!match?.bracketUrl) {
-      return reply("❌ No hay bracket disponible.");
+      return reply(
+        [
+          "❌ *BRACKET NO DISPONIBLE*",
+          "",
+          "El bracket todavía no está disponible.",
+          "Vuelve más tarde: !partida"
+        ].join("\n")
+      );
     }
 
-    await reply(`🏆 *Bracket*\n${match.bracketUrl}`);
+    await reply(
+      [
+        "═════════════════════════════════════",
+        `🏆 *BRACKET - ${match.tournamentName.toUpperCase()}*`,
+        "═════════════════════════════════════",
+        "",
+        `🔗 ${match.bracketUrl}`,
+        "",
+        "═════════════════════════════════════",
+        "💡 Abre el link para ver el bracket completo"
+      ].join("\n")
+    );
   }
 };

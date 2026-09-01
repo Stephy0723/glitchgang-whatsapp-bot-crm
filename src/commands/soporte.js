@@ -1,7 +1,23 @@
 module.exports = {
   async execute({ reply }) {
     await reply(
-      "🧑‍💻 *Soporte GlitchGang*\nUn miembro del staff puede atender tu caso. Describe brevemente el problema en el grupo o utiliza el canal oficial de soporte."
+      [
+        "═════════════════════════════════════",
+        "🆘 *SOPORTE GLITCHGANG* 🆘",
+        "═════════════════════════════════════",
+        "",
+        "💬 *¿Tienes problemas?*",
+        "",
+        "Nuestro equipo de staff está aquí para ayudarte.",
+        "",
+        "✅ *OPCIONES:*",
+        "  • Describe tu problema en este grupo",
+        "  • Envía mensaje directo al staff",
+        "  • Email: support@glitchgang.com",
+        "",
+        "═════════════════════════════════════",
+        "🌟 Tiempo de respuesta: <1 hora"
+      ].join("\n")
     );
   }
 };

@@ -21,9 +21,9 @@ const schemas = {
 };
 
 const titles = {
-  dashboard:"Dashboard", contacts:"Usuarios", teams:"Equipos", tournaments:"Torneos",
-  matches:"Partidas", groups:"Grupos WhatsApp", checkins:"Check-ins", conversations:"Conversaciones",
-  commandLogs:"Comandos", notes:"Notas", settings:"Configuración"
+  dashboard:"📊 Dashboard", ranking:"🏅 Ranking", analytics:"📈 Análisis", contacts:"👥 Usuarios", teams:"⚽ Equipos", tournaments:"🏆 Torneos",
+  matches:"🎮 Partidas", groups:"💬 Grupos", checkins:"✅ Check-ins", conversations:"💭 Conversaciones",
+  commandLogs:"⌨️ Comandos", notes:"📝 Notas", settings:"⚙️ Configuración"
 };
 
 async function api(path, options={}) {
@@ -48,17 +48,88 @@ async function renderDashboard(){
   document.querySelector("#content").innerHTML=`
     <div class="cards">
       ${[
-        ["Usuarios",c.contacts],["Equipos",c.teams],["Torneos",c.tournaments],["Partidas",c.matches],
-        ["Grupos",c.groups],["Check-ins",c.checkins],["Mensajes",c.conversations],["Comandos",c.commands]
-      ].map(x=>`<div class="card"><small>${x[0]}</small><div class="metric">${x[1]}</div></div>`).join("")}
+        ["👥 Usuarios",c.contacts],["⚽ Equipos",c.teams],["🏆 Torneos",c.tournaments],["🎮 Partidas",c.matches],
+        ["💬 Grupos",c.groups],["✅ Check-ins",c.checkins],["💭 Mensajes",c.conversations],["⌨️ Comandos",c.commands]
+      ].map(x=>`<div class="card"><small>${x[0].split(" ")[1]}</small><div class="metric">${x[1]}</div></div>`).join("")}
     </div>
     <div class="grid-2">
-      <div class="panel"><h3>Próximas partidas</h3>${tableFor("matches",d.upcomingMatches,false)}</div>
-      <div class="panel"><h3>Actividad del bot</h3><div class="activity">
+      <div class="panel"><h3>🎮 Próximas partidas</h3>${tableFor("matches",d.upcomingMatches.slice(0,5),false)}</div>
+      <div class="panel"><h3>⌨️ Actividad del bot</h3><div class="activity">
         ${(d.recentCommands.length?d.recentCommands:[{command:"Sin actividad",phone:"—",createdAt:""}]).map(x=>
           `<div class="activity-item"><strong>!${esc(x.command)}</strong><br><small>${esc(x.phone||"")} ${esc(x.groupName||"")}</small></div>`
         ).join("")}
       </div></div>`;
+}
+
+async function renderRanking(){
+  try{
+    const teams=await api("teams");
+    const matches=await api("matches");
+    const standings=teams.map(t=>{
+      const teamMatches=matches.filter(m=>(m.teamA===t.name||m.teamB===t.name)&&m.status==="completed");
+      const wins=teamMatches.filter(m=>(m.teamA===t.name&&m.winner===t.name)||(m.teamB===t.name&&m.winner===t.name)).length;
+      const losses=teamMatches.length-wins;
+      return{...t,wins,losses,matches:teamMatches.length,winRate:teamMatches.length>0?Math.round(wins/teamMatches.length*100):0};
+    }).sort((a,b)=>b.wins-a.wins);
+    
+    document.querySelector("#content").innerHTML=`
+      <div class="panel" style="max-width:100%">
+        <h3>🏅 Ranking de Equipos</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>#</th><th>Equipo</th><th>Juego</th><th>Victorias</th><th>Derrotas</th><th>Matches</th><th>%</th></tr></thead>
+          <tbody>${standings.map((t,i)=>`
+            <tr style="border-left:4px solid ${i===0?'#fbbf24':i===1?'#c0c0c0':i===2?'#cd7f32':'var(--line)'}">
+              <td><strong>${i+1}</strong></td>
+              <td><strong>${esc(t.name)}</strong></td>
+              <td>${esc(t.game)}</td>
+              <td><span class="badge ok">${t.wins}</span></td>
+              <td><span class="badge">${t.losses}</span></td>
+              <td>${t.matches}</td>
+              <td><strong>${t.winRate}%</strong></td>
+            </tr>
+          `).join("")}</tbody>
+        </table></div>
+      </div>`;
+  }catch(e){
+    document.querySelector("#content").innerHTML=`<div class="panel"><p style="color:var(--danger)">Error: ${esc(e.message)}</p></div>`;
+  }
+}
+
+async function renderAnalytics(){
+  try{
+    const matches=await api("matches");
+    const tournaments=await api("tournaments");
+    const completed=matches.filter(m=>m.status==="completed").length;
+    const scheduled=matches.filter(m=>m.status==="scheduled").length;
+    const activeTournaments=tournaments.filter(t=>t.status==="active").length;
+    const finishedTournaments=tournaments.filter(t=>t.status==="finished").length;
+    
+    document.querySelector("#content").innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="panel">
+          <h3>📊 Estadísticas de Partidas</h3>
+          <div class="cards" style="grid-template-columns:1fr">
+            <div class="card"><small>Completadas</small><div class="metric">${completed}</div></div>
+            <div class="card"><small>Programadas</small><div class="metric">${scheduled}</div></div>
+            <div class="card"><small>Tasa de finalización</small><div class="metric">${matches.length>0?Math.round(completed/(completed+scheduled)*100):0}%</div></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>🏆 Estadísticas de Torneos</h3>
+          <div class="cards" style="grid-template-columns:1fr">
+            <div class="card"><small>Activos</small><div class="metric">${activeTournaments}</div></div>
+            <div class="card"><small>Finalizados</small><div class="metric">${finishedTournaments}</div></div>
+            <div class="card"><small>Total</small><div class="metric">${tournaments.length}</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:16px">
+        <h3>📈 Últimas Partidas Completadas</h3>
+        ${tableFor("matches",matches.filter(m=>m.status==="completed").slice(0,10),false)}
+      </div>`;
+  }catch(e){
+    document.querySelector("#content").innerHTML=`<div class="panel"><p style="color:var(--danger)">Error: ${esc(e.message)}</p></div>`;
+  }
 }
 
 function columnsFor(view, rows){
@@ -128,6 +199,8 @@ async function navigate(view){
   document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
   document.querySelector("#pageTitle").textContent=titles[view];
   if(view==="dashboard") return renderDashboard();
+  if(view==="ranking") return renderRanking();
+  if(view==="analytics") return renderAnalytics();
   if(view==="settings") return renderSettings();
   return renderCollection(view);
 }

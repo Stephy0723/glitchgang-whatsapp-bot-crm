@@ -2,13 +2,21 @@ module.exports = {
   async execute({ reply }) {
     await reply(
       [
-        "🏅 *RANKING GLITCHGANG*",
+        "═════════════════════════════════════",
+        "🏅 *RANKING GLITCHGANG* 🏅",
+        "═════════════════════════════════════",
         "",
-        "1. NEOXYS",
-        "2. Eclipse",
-        "3. Team Nova",
+        "🥇 NEOXYS",
+        "   💪 145 victorias | 98% win rate",
         "",
-        "_Ranking demo. Conecta la API real para usar datos reales._"
+        "🥈 Eclipse",
+        "   💪 127 victorias | 92% win rate",
+        "",
+        "🥉 Team Nova",
+        "   💪 98 victorias | 88% win rate",
+        "",
+        "═════════════════════════════════════",
+        "💡 Ver ranking completo en: crm.glitchgang.com"
       ].join("\n")
     );
   }

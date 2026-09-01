@@ -5,23 +5,38 @@ module.exports = {
     const id = args[0];
 
     if (!id) {
-      return reply("Uso: *!torneo <id>*");
+      return reply(
+        [
+          "⚡ *USO*: !torneo <id>",
+          "",
+          "Obtén el ID con: !torneos"
+        ].join("\n")
+      );
     }
 
     const t = await gg.getTournament(id);
 
     if (!t) return reply("❌ Torneo no encontrado.");
 
-    await reply(
-      [
-        `🏆 *${t.name}*`,
-        `🎮 ${t.game}`,
-        `📅 ${t.startDate}`,
-        `👥 ${t.registeredTeams}/${t.maxTeams}`,
-        `📌 Estado: ${t.status}`,
-        t.bracketUrl ? `🔗 Bracket: ${t.bracketUrl}` : null,
-        t.rulesUrl ? `📖 Reglas: ${t.rulesUrl}` : null
-      ].filter(Boolean).join("\n")
-    );
+    const lines = [
+      "═════════════════════════════════════",
+      `🌟 *${t.name}*`,
+      "═════════════════════════════════════",
+      "",
+      `🎮 *Juego:* ${t.game}`,
+      `📅 *Inicio:* ${t.startDate}`,
+      `💪 *Estado:* ${t.status}`,
+      `👥 *Equipos:* ${t.registeredTeams}/${t.maxTeams}`,
+      ""
+    ];
+
+    if (t.bracketUrl) lines.push(`🏆 Bracket: ${t.bracketUrl}`);
+    if (t.rulesUrl) lines.push(`📖 Reglas: ${t.rulesUrl}`);
+    if (t.discordUrl) lines.push(`🎬 Discord: ${t.discordUrl}`);
+
+    lines.push("");
+    lines.push("═════════════════════════════════════");
+
+    await reply(lines.join("\n"));
   }
 };

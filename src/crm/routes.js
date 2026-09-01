@@ -20,6 +20,10 @@ router.get("/login", (req, res) => {
   res.sendFile(path.join(process.cwd(), "src/crm/public/login.html"));
 });
 
+router.get("/linking", (_req, res) => {
+  res.sendFile(path.join(process.cwd(), "src/crm/public/linking.html"));
+});
+
 router.post("/auth/login", (req, res) => {
   const user = String(req.body.username || "");
   const pass = String(req.body.password || "");
@@ -71,6 +75,84 @@ router.get("/api/dashboard", (_req, res) => {
       .slice(0, 8),
     recentCommands: db.commandLogs.slice(0, 10),
     recentConversations: db.conversations.slice(0, 10)
+  });
+});
+
+router.get("/api/analytics/ranking", (_req, res) => {
+  const db = store.read();
+  const teams = db.teams || [];
+  const matches = db.matches || [];
+  
+  const standings = teams.map(t => {
+    const teamMatches = matches.filter(m => 
+      (m.teamA === t.name || m.teamB === t.name) && m.status === "completed"
+    );
+    const wins = teamMatches.filter(m => 
+      (m.teamA === t.name && m.winner === t.name) || 
+      (m.teamB === t.name && m.winner === t.name)
+    ).length;
+    const losses = teamMatches.length - wins;
+    
+    return {
+      ...t,
+      wins,
+      losses,
+      matches: teamMatches.length,
+      winRate: teamMatches.length > 0 ? Math.round(wins / teamMatches.length * 100) : 0
+    };
+  }).sort((a, b) => b.wins - a.wins);
+  
+  res.json(standings);
+});
+
+router.get("/api/analytics/tournaments", (_req, res) => {
+  const db = store.read();
+  const tournaments = db.tournaments || [];
+  const matches = db.matches || [];
+  
+  const stats = tournaments.map(t => {
+    const tournamentMatches = matches.filter(m => m.tournamentId === t.id);
+    const completed = tournamentMatches.filter(m => m.status === "completed").length;
+    const scheduled = tournamentMatches.filter(m => m.status === "scheduled").length;
+    
+    return {
+      ...t,
+      totalMatches: tournamentMatches.length,
+      completedMatches: completed,
+      scheduledMatches: scheduled,
+      completionRate: tournamentMatches.length > 0 
+        ? Math.round(completed / tournamentMatches.length * 100) 
+        : 0
+    };
+  });
+  
+  res.json(stats);
+});
+
+router.get("/api/analytics/summary", (_req, res) => {
+  const db = store.read();
+  const matches = db.matches || [];
+  const tournaments = db.tournaments || [];
+  
+  const completed = matches.filter(m => m.status === "completed").length;
+  const scheduled = matches.filter(m => m.status === "scheduled").length;
+  const activeTournaments = tournaments.filter(t => t.status === "active").length;
+  const finishedTournaments = tournaments.filter(t => t.status === "finished").length;
+  
+  res.json({
+    matches: {
+      total: matches.length,
+      completed,
+      scheduled,
+      completionRate: matches.length > 0 
+        ? Math.round(completed / (completed + scheduled) * 100) 
+        : 0
+    },
+    tournaments: {
+      total: tournaments.length,
+      active: activeTournaments,
+      finished: finishedTournaments
+    }
   });
 });
 

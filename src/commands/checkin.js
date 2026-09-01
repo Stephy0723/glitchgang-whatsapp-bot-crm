@@ -5,19 +5,33 @@ module.exports = {
     const match = await gg.getUpcomingMatch(phone);
 
     if (!match) {
-      return reply("❌ No tienes una partida disponible para check-in.");
+      return reply(
+        [
+          "❌ *SIN PARTIDA DISPONIBLE*",
+          "",
+          "No tienes una partida para hacer check-in.",
+          "Revisa tus partidas: !partida"
+        ].join("\n")
+      );
     }
 
     const result = await gg.checkIn(phone, match.id);
 
     await reply(
       [
+        "═════════════════════════════════════",
         "✅ *CHECK-IN CONFIRMADO*",
-        `🏆 ${match.tournamentName}`,
-        `⚔️ ${match.teamA} vs ${match.teamB}`,
-        `🆔 ${result.matchId}`,
-        match.discordUrl ? `🎙 Discord: ${match.discordUrl}` : null
-      ].filter(Boolean).join("\n")
+        "═════════════════════════════════════",
+        "",
+        `🌟 Torneo: *${match.tournamentName}*`,
+        `⚡ Partida: *${match.teamA} vs ${match.teamB}*`,
+        `🎯 ID Partida: ${result.matchId}`,
+        "",
+        match.discordUrl ? `🎬 Discord: ${match.discordUrl}` : "",
+        "",
+        "═════════════════════════════════════",
+        "💡 ¡Estáte listo para la partida!"
+      ].filter(l => l).join("\n")
     );
   }
 };

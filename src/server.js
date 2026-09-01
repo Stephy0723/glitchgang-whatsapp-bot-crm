@@ -9,6 +9,8 @@ const apiRouter = require("./api/routes");
 const crmRouter = require("./crm/routes");
 const crmStore = require("./crm/store");
 const { notFound, errorHandler } = require("./api/middleware/errors");
+const db = require("./db/init");
+const { initializeJobs } = require("./jobs/scheduler");
 
 function startApi() {
   const app = express();
@@ -52,9 +54,25 @@ function startApi() {
 
   const port = Number(process.env.PORT || 4100);
 
-  app.listen(port, () => {
+  app.listen(port, async () => {
     console.log(`API GlitchGang: http://localhost:${port}`);
     console.log(`CRM GlitchGang: http://localhost:${port}/crm`);
+    console.log(`Linking WhatsApp: http://localhost:${port}/crm/linking.html`);
+    
+    // Inicializar base de datos
+    try {
+      await db.initializeTables();
+      console.log("✅ Base de datos inicializada");
+    } catch (error) {
+      console.error("❌ Error inicializando base de datos:", error);
+    }
+
+    // Inicializar jobs programados
+    try {
+      initializeJobs();
+    } catch (error) {
+      console.error("❌ Error inicializando jobs:", error);
+    }
   });
 
   return app;

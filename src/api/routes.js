@@ -1,5 +1,9 @@
 const router = require("express").Router();
 const gg = require("../services/glitchgangApi");
+const whatsappAuthRouter = require("./routes/whatsappAuth.routes");
+
+// Rutas de autenticación por WhatsApp
+router.use("/whatsapp", whatsappAuthRouter);
 
 router.get("/health", (_req, res) => {
   res.json({
